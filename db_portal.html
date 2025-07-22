@@ -480,7 +480,7 @@
             </table>
         </div>
 
-        <div id="prdrSyncSection">
+        <div id="prdrSyncSection" style="display:none;">
             <div class="db-sync-block">
                 <h2 class="section-title">MIB PR and DR Sync Status</h2>
                 <div class="row">
@@ -684,10 +684,6 @@
             DR: ["MIDR", "SIDR", "RepoDR", "ArchivalDR", "HIPR"]
         };
 
-        // Initialize with PR-DR Sync section hidden
-        document.getElementById("prdrSyncSection").style.display = "none";
-        document.getElementById("maxTable").style.display = "none";
-
         function updateDBOptions() {
             const env = document.getElementById("env").value;
             const dbDropdown = document.getElementById("db");
@@ -752,7 +748,10 @@
                         data.sync_status.forEach(row => {
                             const tr = document.createElement("tr");
                             let diffClass = '';
-                            const diff = parseInt(row.diff.replace(/,/g, ''));
+                            
+                            // Fixed: Convert diff to string before using replace, handle both string and number cases
+                            const diffValue = String(row.diff || '0'); // Convert to string, default to '0' if null/undefined
+                            const diff = parseInt(diffValue.replace(/,/g, '')) || 0; // Remove commas and parse, default to 0
                             
                             if (diff > 1000) {
                                 diffClass = 'diff-danger';
@@ -761,10 +760,10 @@
                             }
                             
                             tr.innerHTML = `
-                                <td>${row.thread}</td>
-                                <td>${row.received}</td>
-                                <td>${row.applied}</td>
-                                <td class="${diffClass}">${row.diff}</td>
+                                <td>${row.thread || '--'}</td>
+                                <td>${row.received || '--'}</td>
+                                <td>${row.applied || '--'}</td>
+                                <td class="${diffClass}">${row.diff || '--'}</td>
                             `;
                             syncTable.appendChild(tr);
                         });
@@ -837,47 +836,65 @@
                     });
                 })
                 .catch(error => {
-                    console.error('Error fetching sync status:', error);
-                    const tables = ["mibpr", "mibdr", "sipr", "sidr", "reportpr", "reportdr", "archnpr", "archndr", "archpr", "archdr"];
-                    tables.forEach(id => {
-                        document.getElementById(id).innerHTML = `<tr><td colspan='4' style='color:var(--danger-color)'>Error: ${error.message}</td></tr>`;
-                    });
+                    alert("Error fetching data: " + error);
                 });
         }
-        
-        function updateSyncTable(tableId, data) {
-            const table = document.getElementById(tableId);
-            
-            if (!data || data.length === 0) {
-                table.innerHTML = "<tr><td colspan='4' class='no-data'>No synchronization data available</td></tr>";
-                return;
-            }
-            
-            table.innerHTML = "";
-            
-            data.forEach(row => {
-                const tr = document.createElement("tr");
-                let diffClass = '';
-                const diff = parseInt(row.diff.replace(/,/g, ''));
-                
-                if (diff > 1000) {
-                    diffClass = 'diff-danger';
-                } else if (diff > 100) {
-                    diffClass = 'diff-warning';
+        function openToolLink(selectElement){
+                            const url = selectElement.value;
+                            if(url) {
+                                                window.open(url, '_blank');
+                                                selectElement.selectedIndex = 0;
+                        }
                 }
-                
-                tr.innerHTML = `
-                    <td>${row.thread}</td>
-                    <td>${row.received}</td>
-                    <td>${row.applied}</td>
-                    <td class="${diffClass}">${row.diff}</td>
-                `;
-                table.appendChild(tr);
-            });
-        }
 
-        // Initialize with PR options
-        updateDBOptions();
+/*
+        function togglePrDrSync(){
+        const section = document.getElementById("prdrSyncSection");
+        section.style.display = section.style.display === "none"? "block" : "none";
+        if(section.style.display === "block") {
+                fetchSyncStatus();
+        }
+}
+
+function prdrSyncSection(){
+        fetch("/api/get-all-sync-status/").then(response => response.json()).then(data => {
+                data.forEach(item => {
+                        let prId = "", drId = "";
+                        if(item.pr_env === "MIPR" && item.pr_env === "MIDR"){
+                                prId = "mibpr"; drId = "mibdr";
+                        } else if(item.pr_env === "SIPR" && item.pr_env === "SIDR"){
+                                prId = "sipr"; drId = "sidr";
+                        } else if(item.pr_env === "RepoPR" && item.pr_env === "RepoDR") {
+                                prId = "reportpr"; drId = "reportdr";
+                        } else if(item.pr_env === "ArchivalPR" && item.pr_env === "ArchivalPR") {
+                                prId = "archnpr"; drId = "archndr";
+                        }
+
+                        if(prID && drId){
+                                document.getElementById(prId).innerHTML = "";
+                                item.pr_sync_data.forEach(row => {
+                                        document.getElementById(prId).innerHTML += `
+                                                <tr>
+                                                        <td>${row.thread}</td>
+                                                        <td>${row.received}</td>
+                                                        <td>${row.applied}</td>
+                                                        <td>${row.diff}</td>
+                                                </tr>`;
+                        });
+
+                        document.getElementById(drId).innerHTML = "";
+                                item.pr_sync_data.forEach(row => {
+                                        document.getElementById(drId).innerHTML += `
+                                                <tr>
+                                                        <td>${row.thread}</td>
+                                                        <td>${row.received}</td>
+                                                        <td>${row.applied}</td>
+                                                        <td>${row.diff}</td>
+                                                </tr>`;
+                        });
+                }
+        });
+                            */
     </script>
 </body>
 </html>
