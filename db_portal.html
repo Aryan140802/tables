@@ -763,7 +763,7 @@
                                 <td>${row.thread || '--'}</td>
                                 <td>${row.received || '--'}</td>
                                 <td>${row.applied || '--'}</td>
-                                <td class="${diffClass}">${row.diff || '--'}</td>
+                                <td class="${diffClass}">${row.diff === undefined || row.diff === null ? '--' : row.diff}</td>
                             `;
                             syncTable.appendChild(tr);
                         });
